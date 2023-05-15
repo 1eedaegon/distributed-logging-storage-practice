@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+// package 이름을 적어야 같은 메시지 이름이라도 충돌하지 않는다.
+package log.v1;
+
+option go_package = "github.com/1eedaegon/distributed-logging-storage-practice/api/v1/log_v1";
+
+message Record {
+    bytes value = 1;
+    uint64 offset = 2;
+}

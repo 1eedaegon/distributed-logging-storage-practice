@@ -51,9 +51,9 @@ offset not found
 ## Implements
 
 - [x] Prototype
-- [ ] Protocol buffer with struct
-  - [ ] Schema
-  - [ ] Domain
+- [x] Protocol buffer with struct
+  - [x] Schema
+  - [x] Domain
 - [ ] Logging package
   - [ ] Storage
   - [ ] Indexing
