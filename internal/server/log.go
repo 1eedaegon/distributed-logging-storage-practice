@@ -38,3 +38,13 @@ func (c *Log) Read(offset uint64) (Record, error) {
 	}
 	return c.records[offset], nil
 }
+
+func (c *Log) Delete(offset uint64) (uint64, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if offset >= uint64(len(c.records)) {
+		return offset, ErrOffsetNotFound
+	}
+	
+	return offset, nil
+}

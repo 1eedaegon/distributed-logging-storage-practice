@@ -54,7 +54,7 @@ offset not found
 - [x] Protocol buffer with struct
   - [x] Schema
   - [x] Domain
-- [ ] Logging package
+- [x] Logging package
   - [ ] Storage
   - [ ] Indexing
 - [ ] gRPC request

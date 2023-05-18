@@ -23,7 +23,7 @@ const (
 )
 
 type Record struct {
-	state         protoimpl.MessageState	
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
