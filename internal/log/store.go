@@ -71,11 +71,11 @@ func (s *store) Read(pos uint64) ([]byte, error) {
 	if err := s.buf.Flush(); err != nil {
 		return nil, err
 	}
-	size := make([]byte, lenWidth)
+	size := make([]byte, lenWidth) // 버퍼를 스택에 저장
 	if _, err := s.File.ReadAt(size, int64(pos)); err != nil {
 		return nil, err
 	}
-	b := make([]byte, enc.Uint64(size))
+	b := make([]byte, enc.Uint64(size)) // 힙에 저장
 	if _, err := s.File.ReadAt(b, int64(pos+lenWidth)); err != nil {
 		return nil, err
 	}
@@ -83,6 +83,7 @@ func (s *store) Read(pos uint64) ([]byte, error) {
 }
 
 // offset부터 len(p)만큼 Read
+// wrapping *file.ReadAt
 func (s *store) ReadAt(p []byte, off int64) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
