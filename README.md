@@ -55,7 +55,7 @@ offset not found
   - [x] Schema
   - [x] Domain
 - [x] Logging package
-  - [ ] Storage
+  - [x] Storage
   - [ ] Indexing
 - [ ] gRPC request
   - [ ] Service define
