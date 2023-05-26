@@ -56,7 +56,7 @@ offset not found
   - [x] Domain
 - [x] Logging package
   - [x] Storage
-  - [ ] Indexing
+  - [x] Indexing
 - [ ] gRPC request
   - [ ] Service define
   - [ ] Server testing
