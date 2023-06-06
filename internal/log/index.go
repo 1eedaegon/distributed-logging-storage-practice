@@ -28,7 +28,7 @@ func newIndex(f *os.File, c Config) (*index, error) {
 		return nil, err
 	}
 	idx.size = uint64(file.Size())                                               // 인덱스에 파일에서 읽은 사이즈 추가
-	if err = os.Truncate(f.Name(), int64(c.Segment.MaxStoreBytes)); err != nil { // 인덱스 파일 최대크기로 변경
+	if err = os.Truncate(f.Name(), int64(c.Segment.MaxIndexBytes)); err != nil { // 인덱스 파일 최대크기로 변경
 		return nil, err
 	}
 	// #include <sys/mman.h>와 동작이 같다.
@@ -73,7 +73,7 @@ func (idx *index) Read(in int64) (out uint32, pos uint64, err error) {
 		return 0, 0, io.EOF
 	}
 	out = enc.Uint32(idx.mmap[pos : pos+offWidth])
-	pos = enc.Uint64(idx.mmap[pos+offWidth : posWidth+entWidth])
+	pos = enc.Uint64(idx.mmap[pos+offWidth : idx.size+entWidth])
 	return out, pos, nil
 }
 
