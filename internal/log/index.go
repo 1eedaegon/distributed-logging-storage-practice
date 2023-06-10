@@ -73,7 +73,7 @@ func (idx *index) Read(in int64) (out uint32, pos uint64, err error) {
 		return 0, 0, io.EOF
 	}
 	out = enc.Uint32(idx.mmap[pos : pos+offWidth])
-	pos = enc.Uint64(idx.mmap[pos+offWidth : idx.size+entWidth])
+	pos = enc.Uint64(idx.mmap[pos+offWidth : pos+entWidth])
 	return out, pos, nil
 }
 
