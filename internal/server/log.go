@@ -45,6 +45,6 @@ func (c *Log) Delete(offset uint64) (uint64, error) {
 	if offset >= uint64(len(c.records)) {
 		return offset, ErrOffsetNotFound
 	}
-	
+
 	return offset, nil
 }
