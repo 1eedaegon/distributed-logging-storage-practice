@@ -58,7 +58,7 @@ offset not found
   - [x] Storage
   - [x] Indexing
   - [x] Segment
-  - [ ] Log(Set of segment)
+  - [x] Log(Set of segment)
 - [ ] gRPC request
   - [ ] Service define
   - [ ] Server testing

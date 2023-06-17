@@ -55,7 +55,7 @@ func (l *Log) setup() error {
 		i++ // baseOffset은 index,store 둘 다 갖고있다.
 	}
 	if l.segments == nil {
-		if err := l.newSegment(l.Config.Segment.InitialOffset); err != nil {
+		if err := l.newSegment(l.Config.Segment.InitialBytes); err != nil {
 			return err
 		}
 	}
