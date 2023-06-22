@@ -5,6 +5,7 @@
 // source: api/v1/log.proto
 
 // package 이름을 적어야 같은 메시지 이름이라도 충돌하지 않는다.
+// log pub/sub에 대한 protocol.v1
 
 package log_v1
 
