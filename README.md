@@ -59,7 +59,7 @@ offset not found
   - [x] Indexing
   - [x] Segment
   - [x] Log(Set of segment)
-- [ ] gRPC request
+- [x] gRPC request
   - [ ] Service define
   - [ ] Server testing
   - [ ] Client testing
