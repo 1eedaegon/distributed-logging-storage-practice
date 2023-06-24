@@ -6,12 +6,12 @@ package log.v1;
 
 option go_package = "github.com/1eedaegon/distributed-logging-storage-practice/api/v1/log_v1";
 
-// Grpc는 연결성 통신도 하지만 스트림도 지원한다.
+// GRPC는 연결성 통신도 하지만 스트림도 지원한다.(Http2)
 service Log {
-    rpc Produce(ProduceRequest) returns (ProduceResponse) {}
-    rpc Consume(ConsumeRequest) returns (ConsumeResponse) {}
-    rpc ConsumeStream(ConsumeRequest) returns (stream ConsumeResponse) {} // 클라가 서버로 요청보내면 스트림으로 내려준다.
-    rpc ProduceStream(stream ProduceRequest) returns (stream ProduceResponse) {} // 클라도 스트림, 서버도 스트림
+    rpc Produce(ProduceRequest) returns (ProduceResponse) {} 
+    rpc Consume(ConsumeRequest) returns (ConsumeResponse) {} 
+    rpc ConsumeStream(ConsumeRequest) returns (stream ConsumeResponse) {} // 클라가 서버로 요청보내면 스트림으로 내려준다. 
+    rpc ProduceStream(stream ProduceRequest) returns (stream ProduceResponse) {} // 클라도 스트림, 서버도 스트림 
 }
 
 // Produce는 레코드를 보내면 생성된 레코드의 오프셋을 반환한다.
@@ -20,18 +20,19 @@ message ProduceRequest {
 }
 
 message ProduceResponse {
-    Record offset = 1;
+    uint64 offset = 1;
 }
 
 // Consume은 소비할 레코드의 오프셋을 보내면 레코드를 반환한다.
 message ConsumeRequest {
-    Record offset = 1;
+    uint64 offset = 1;
 }
 
 message ConsumeResponse {
     Record record = 1;
 }
 
+// Record는 value와 offset을 가진다.
 message Record {
     bytes value = 1;
     uint64 offset = 2;

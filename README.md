@@ -48,6 +48,18 @@ offset not found
 
 ```
 
+4. Install GRPC presets(Dev)
+
+```bash
+# On ubuntu
+sudo apt install -y protobuf-compiler
+# Install grpc presets
+go install google.golang.org/protobuf/cmd/protoc-gen-go
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+# Update PATH
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
 ## Implements
 
 - [x] Prototype
@@ -60,7 +72,7 @@ offset not found
   - [x] Segment
   - [x] Log(Set of segment)
 - [x] gRPC request
-  - [ ] Service define
+  - [x] Service define
   - [ ] Server testing
   - [ ] Client testing
 - [ ] Security
