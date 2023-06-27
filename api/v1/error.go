@@ -22,6 +22,4 @@ func (e ErrOffsetOutOfRange) GRPCStatus() *status.Status {
 	return std
 }
 
-func (e ErrOffsetOutOfRange) Error() string {
-
-}
+func (e ErrOffsetOutOfRange) Error() string {}
