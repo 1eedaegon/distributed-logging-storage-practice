@@ -73,9 +73,9 @@ export PATH="$PATH:$(go env GOPATH)/bin"
   - [x] Log(Set of segment)
 - [x] gRPC request
   - [x] Service define
-  - [ ] Server testing
-  - [ ] Client testing
-- [ ] Security
+  - [x] Server testing
+  - [x] Client testing
+- [x] Security
   - [ ] TLS
   - [ ] ACL
 - [ ] Tracing
