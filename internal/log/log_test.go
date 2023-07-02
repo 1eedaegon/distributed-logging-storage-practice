@@ -51,7 +51,7 @@ func testOutOfRange(t *testing.T, log *Log) {
 	segment, err := log.Read(1)
 	require.Nil(t, segment) // 범위가 넘어가면 nil을 반환해야 한다.
 	apiErr := err.(api.ErrOffsetOutOfRange)
-	require.Equal(t, uint64(1), apiErr) // Out of range가 나와야 한다.
+	require.Equal(t, uint64(1), apiErr.Offset) // Out of range가 나와야 한다.
 }
 
 func testInitExisting(t *testing.T, log *Log) {
