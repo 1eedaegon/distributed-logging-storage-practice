@@ -76,7 +76,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
   - [x] Server testing
   - [x] Client testing
 - [x] Security
-  - [ ] TLS
+  - [x] TLS
   - [ ] ACL
 - [ ] Tracing
   - [ ] Metrics

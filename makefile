@@ -1,4 +1,27 @@
 # Reflect에 의한 동적 컴파일 template 생성
+
+CONFIG_PATH=${HOME}/.distributed-logging-storage-practice
+
+.PHONY: init
+init:
+	mkdir -p ${CONFIG_PATH}
+
+.PHONY: gencert
+gencert:
+	cfssl gencert -initca test/ca-csr.json | cfssljson -bare ca
+
+	cfssl gencert \
+		-ca=ca.pem \
+		-ca-key=ca-key.pem \
+		-config=test/ca-config.json \
+		-profile=server test/server-csr.json | cfssljson -bare server
+	mv *.pem *.csr ${CONFIG_PATH}
+
+.PHONY: test
+test:
+	go test -race ./... -v
+
+.PHONY: compile
 compile:
 	protoc api/v1/*.proto \
 		--go_out=. \
@@ -6,5 +29,3 @@ compile:
 		--go_opt=paths=source_relative \
 		--go-grpc_opt=paths=source_relative \
 		--proto_path=.
-test:
-	go test -race ./... -v
