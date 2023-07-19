@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	CAFile = configFile("ca.pem")
+	CAFile         = configFile("ca.pem")
 	ServerCertFile = configFile("server.pem")
-	ServerKeyFile = configFile("server-key.pem")
+	ServerKeyFile  = configFile("server-key.pem")
 )
 
 func configFile(filename string) string {
@@ -19,5 +19,5 @@ func configFile(filename string) string {
 	if err != nil {
 		panic(err)
 	}
-	return filepath.Join(homedir,".distributed-logging-storage-practice", filename)
+	return filepath.Join(homedir, "workspace/golang/distributed-logging-storage-practice/config-path-test", filename)
 }

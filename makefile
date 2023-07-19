@@ -1,10 +1,14 @@
 # Reflect에 의한 동적 컴파일 template 생성
 
-CONFIG_PATH=${HOME}/.distributed-logging-storage-practice
+CONFIG_PATH=${HOME}/workspace/golang/distributed-logging-storage-practice/config-path-test
 
 .PHONY: init
 init:
 	mkdir -p ${CONFIG_PATH}
+
+.PHONY: pre-gencert
+pre-gencert:
+	go install github.com/cloudflare/cfssl/cmd/...
 
 .PHONY: gencert
 gencert:
