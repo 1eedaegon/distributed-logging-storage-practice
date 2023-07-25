@@ -1,4 +1,3 @@
-// Access control list(ACL)
 package auth
 
 import (
@@ -10,13 +9,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Authorizer struct {
-	enforcer *casbin.Enforcer
-}
-
 func New(model, policy string) *Authorizer {
 	enforcer := casbin.NewEnforcer(model, policy)
 	return &Authorizer{enforcer: enforcer}
+}
+
+// Access control list(ACL)
+type Authorizer struct {
+	enforcer *casbin.Enforcer
 }
 
 func (a *Authorizer) Authorize(subject, object, action string) error {

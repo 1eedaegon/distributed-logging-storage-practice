@@ -7,10 +7,10 @@ init:
 
 .PHONY: pre-gencert
 pre-gencert:
-	go install github.com/cloudflare/cfssl/cmd/...
+	go install github.com/cloudflare/cfssl/cmd
 
 .PHONY: gencert
-gencert:
+gencert: init
 	cfssl gencert -initca test/ca-csr.json | cfssljson -bare ca
 
 	cfssl gencert \
@@ -50,7 +50,7 @@ $(CONFIG_PATH)/policy.csv:
 	cp test/policy.csv $(CONFIG_PATH)/policy.csv
 	
 .PHONY: test
-test: $(CONFIG_PATH)/model.conf $(CONFIG_PATH)/policy.csv
+test: gencert $(CONFIG_PATH)/model.conf $(CONFIG_PATH)/policy.csv
 	go test -race ./... -v
 
 # Reflect에 의한 동적 컴파일 template 생성
