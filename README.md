@@ -78,9 +78,9 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 - [x] Security
   - [x] TLS
   - [x] ACL
-- [ ] Tracing
-  - [ ] Metrics
-  - [ ] Tracing
+- [x] Tracing
+  - [x] Metrics
+  - [x] Tracing
 - [ ] Distributed service
   - [ ] Service discovery
   - [ ] Concensus
