@@ -19,7 +19,7 @@ func New(model, policy string) *Authorizer {
 	return &Authorizer{enforcer: enforcer}
 }
 
-func (a *Authorizer) Authorizer(subject, object, action string) error {
+func (a *Authorizer) Authorize(subject, object, action string) error {
 	if !a.enforcer.Enforce(subject, object, action) {
 		msg := fmt.Sprintf("%s not permitted to %s to %s", subject, action, object)
 		st := status.New(codes.PermissionDenied, msg)
