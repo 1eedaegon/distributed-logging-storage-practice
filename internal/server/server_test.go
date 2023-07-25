@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	api "github.com/1eedaegon/distributed-logging-storage-practice/api/v1"
+	"github.com/1eedaegon/distributed-logging-storage-practice/internal/auth"
 	"github.com/1eedaegon/distributed-logging-storage-practice/internal/config"
 	"github.com/1eedaegon/distributed-logging-storage-practice/internal/log"
 	"github.com/stretchr/testify/require"
@@ -89,7 +90,14 @@ func testUnauthorized(t *testing.T, _, client api.LogClient, config *Config) {
 	if gotCode != wantCode {
 		t.Fatalf("got code: %d, want: %d", gotCode, wantCode)
 	}
-	
+	consume, err := client.Consume(ctx, &api.ConsumeRequest{Offset: 0})
+	if consume != nil {
+		t.Fatalf("consume response should be nil")
+	}
+	gotCode, wantCode = status.Code(err), codes.PermissionDenied
+	if gotCode != wantCode {
+		t.Fatalf("got code: %d, want: %d", gotCode, wantCode)
+	}
 }
 
 func TestServer(t *testing.T) {
@@ -102,6 +110,7 @@ func TestServer(t *testing.T) {
 		"produce/consume a message to/from the log success": testProduceConsume,
 		"produce/consume a stream succeeds":                 testProduceConsumeStream,
 		"consume past log boundary fails":                   testConsumePastBoundary,
+		"unauthorized fails":                                testUnauthorized,
 	} {
 		t.Run(scenario, func(t *testing.T) {
 			rootClient, nobodyClient, config, teardown := setupTest(t, nil)
@@ -154,8 +163,10 @@ func setupTest(t *testing.T, fn func(*Config)) (rootClient api.LogClient, nobody
 	clog, err := log.NewLog(dir, log.Config{})
 	require.NoError(t, err)
 
+	authorizer := auth.New(config.ACLModelFile, config.ACLPolicyFile)
 	cfg = &Config{
-		CommitLog: clog,
+		CommitLog:  clog,
+		Authorizer: authorizer,
 	}
 	if fn != nil {
 		fn(cfg)
