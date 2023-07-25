@@ -8,11 +8,11 @@ import (
 )
 
 type TLSConfig struct {
-	CertFile string
-	KeyFile string
-	CAFile string
+	CertFile      string
+	KeyFile       string
+	CAFile        string
 	ServerAddress string
-	Server bool
+	Server        bool
 }
 
 func SetupTLSConfig(cfg TLSConfig) (*tls.Config, error) {
@@ -24,7 +24,7 @@ func SetupTLSConfig(cfg TLSConfig) (*tls.Config, error) {
 		if err != nil {
 			return nil, err
 		}
-	}	
+	}
 	if cfg.CAFile != "" {
 		b, err := ioutil.ReadFile(cfg.CAFile)
 		if err != nil {

@@ -1,4 +1,3 @@
-# Reflect에 의한 동적 컴파일 template 생성
 
 CONFIG_PATH=${HOME}/workspace/golang/distributed-logging-storage-practice/config-path-test
 
@@ -18,19 +17,43 @@ gencert:
 		-ca=ca.pem \
 		-ca-key=ca-key.pem \
 		-config=test/ca-config.json \
-		-profile=server test/server-csr.json | cfssljson -bare server
-	
+		-profile=client test/client-csr.json | cfssljson -bare client
+
 	cfssl gencert \
 		-ca=ca.pem \
 		-ca-key=ca-key.pem \
 		-config=test/ca-config.json \
-		-profile=client test/client-csr.json | cfssljson -bare client
+		-profile=server test/server-csr.json | cfssljson -bare server
+	
+	# Client 1
+	cfssl gencert \
+		-ca=ca.pem \
+		-ca-key=ca-key.pem \
+		-config=test/ca-config.json \
+		-profile=client \
+		-cn="nobody" \
+		test/client-csr.json | cfssljson -bare nobody-client
+	# Client 2
+	cfssl gencert \
+		-ca=ca.pem \
+		-ca-key=ca-key.pem \
+		-config=test/ca-config.json \
+		-cn="root" \
+		-profile=client test/client-csr.json | cfssljson -bare root-client
+				
 	mv *.pem *.csr ${CONFIG_PATH}
 
+$(CONFIG_PATH)/model.conf:
+	cp test/model.conf $(CONFIG_PATH)/model.conf
+	
+$(CONFIG_PATH)/policy.csv:
+	cp test/policy.csv $(CONFIG_PATH)/policy.csv
+	
 .PHONY: test
-test:
+test: $(CONFIG_PATH)/model.conf $(CONFIG_PATH)/policy.csv
 	go test -race ./... -v
 
+# Reflect에 의한 동적 컴파일 template 생성
 .PHONY: compile
 compile:
 	protoc api/v1/*.proto \
