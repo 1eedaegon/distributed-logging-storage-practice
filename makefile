@@ -5,9 +5,9 @@ CONFIG_PATH=${HOME}/workspace/golang/distributed-logging-storage-practice/config
 init:
 	mkdir -p ${CONFIG_PATH}
 
-.PHONY: pre-gencert
-pre-gencert:
-	go install github.com/cloudflare/cfssl/cmd
+.PHONY: install
+install:
+	go mod tidy
 
 .PHONY: gencert
 gencert: init
@@ -51,8 +51,12 @@ $(CONFIG_PATH)/policy.csv:
 	
 .PHONY: test
 test: gencert $(CONFIG_PATH)/model.conf $(CONFIG_PATH)/policy.csv
-	go test -race ./... -v
+	go test ./... -race
 
+.PHONY: debug-test
+debug-test: 
+	cd ./internal/server && go test -v -debug=true
+	
 # Reflect에 의한 동적 컴파일 template 생성
 .PHONY: compile
 compile:
