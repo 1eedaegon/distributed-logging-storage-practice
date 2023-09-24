@@ -6,9 +6,9 @@ import (
 	"time"
 
 	. "github.com/1eedaegon/distributed-logging-storage-practice/internal/discovery"
+	port "github.com/1eedaegon/go-dynamic-port-allocator"
 	"github.com/hashicorp/serf/serf"
 	"github.com/stretchr/testify/require"
-	"github.com/travisjeffery/go-dynaport"
 )
 
 type handler struct {
@@ -55,7 +55,7 @@ func TestMembership(t *testing.T) {
 
 func setupMember(t *testing.T, members []*Membership) ([]*Membership, *handler) {
 	id := len(members)
-	ports := dynaport.Get(1)
+	ports := port.Get(1)
 	addr := fmt.Sprintf("%s:%d", "127.0.0.1", ports[0])
 	tags := map[string]string{"rpc_addr ": addr}
 

@@ -1,14 +1,14 @@
 module github.com/1eedaegon/distributed-logging-storage-practice
 
-go 1.19
+go 1.21.0
 
 require (
+	github.com/1eedaegon/go-dynamic-port-allocator v0.0.0-20230924095208-36bd33f22170
 	github.com/casbin/casbin v1.9.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/hashicorp/serf v0.10.1
 	github.com/stretchr/testify v1.8.3
-	github.com/travisjeffery/go-dynaport v1.0.0
 	github.com/tysonmote/gommap v0.0.2
 	go.opencensus.io v0.24.0
 	go.uber.org/zap v1.24.0
