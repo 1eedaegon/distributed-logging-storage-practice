@@ -81,8 +81,8 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 - [x] Tracing
   - [x] Metrics
   - [x] Tracing
-- [ ] Distributed service
-  - [ ] Service discovery
+- [x] Distributed service
+  - [x] Service discovery
   - [ ] Concensus
   - [ ] Load balancing
 - [ ] Deployments
