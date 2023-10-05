@@ -87,6 +87,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
   - [ ] Load balancing
 - [ ] Deployments
   - [ ] Kubernetes
+    - [ ] FQDN Advertising
   - [ ] Helm chart
 
 ## Ref
