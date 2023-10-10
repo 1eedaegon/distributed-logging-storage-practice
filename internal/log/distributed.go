@@ -2,15 +2,16 @@ package log
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
 
 	api "github.com/1eedaegon/distributed-logging-storage-practice/api/v1"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb"
-	"go.starlark.net/lib/proto"
 )
 
 type DistributedLog struct {
@@ -56,7 +57,7 @@ func (l *DistributedLog) setupRaft(dataDir string) error {
 	}
 	logConfig := l.config
 	logConfig.Segment.InitialOffset = 1
-	logStore, err := newLogStore()
+	logStore, err := newLogStore(logDir, logConfig)
 
 	stableStore, err := raftboltdb.NewBoltStore(filepath.Join(dataDir, "raft", "stable"))
 	if err != nil {
@@ -180,25 +181,110 @@ const (
 	AppendRequestType RequestType = 0
 )
 
-func (l *fsm) Apply(record *raft.Log) interface{} {
+func (f *fsm) Apply(record *raft.Log) interface{} {
 	buf := record.Data
 	reqType := RequestType(buf[0])
 	switch reqType {
 	case AppendRequestType:
-		return l.applyAppend(buf[1:])
+		return f.applyAppend(buf[1:])
 	}
 	return nil
 }
 
-func (l *fsm) applyAppend(b []byte) interface{} {
+func (f *fsm) applyAppend(b []byte) interface{} {
 	var req api.ProduceRequest
 	err := proto.Unmarshal(b, &req)
 	if err != nil {
 		return err
 	}
-	offset, err := l.log.Append(req.Record)
+	offset, err := f.log.Append(req.Record)
 	if err != nil {
 		return err
 	}
 	return &api.ProduceResponse{Offset: offset}
+}
+
+func (f *fsm) Snapshot() (raft.FSMSnapshot, error) {
+	r := f.log.Reader()
+	return &snapshot{reader: r}, nil
+}
+
+func (f *fsm) Restore(r io.ReadCloser) error {
+	b := make([]byte, lenWidth)
+	var buf bytes.Buffer
+	for i := 0; ; i++ {
+		_, err := io.ReadFull(r, b)
+		if err != io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+		size := int64(enc.Uint64(b))
+		if _, err := io.CopyN(&buf, r, size); err != nil {
+			return err
+		}
+		record := &api.Record{}
+		if err = proto.Unmarshal(buf.Bytes(), record); err != nil {
+			return err
+		}
+		if i == 0 {
+			f.log.Config.Segment.InitialOffset = record.Offset
+			if err := f.log.Reset(); err != nil {
+				return err
+			}
+		}
+		if _, err = f.log.Append(record); err != nil {
+			return err
+		}
+		buf.Reset()
+	}
+	return nil
+}
+
+var _ raft.FSMSnapshot = (*snapshot)(nil)
+
+type snapshot struct {
+	reader io.Reader
+}
+
+func (s *snapshot) Persist(sink raft.SnapshotSink) error {
+	if _, err := io.Copy(sink, s.reader); err != nil {
+		return err
+	}
+	return sink.Close()
+}
+
+func (s *snapshot) Release() {}
+
+type logStore struct {
+	*Log
+}
+
+func newLogStore(dir string, c Config) (*logStore, error) {
+	log, err := NewLog(dir, c)
+	if err != nil {
+		return nil, err
+	}
+	return &logStore{log: log}, nil
+}
+
+func (l *logStore) FirstIndex(dir string, c Config) (uint64, error) {
+	return l.LowestOffset()
+}
+
+func (l *logStore) LastIndex() (uint64, error) {
+	off, err := l.HighestOffset()
+	return off, err
+}
+
+func (l *logStore) GetLog(index uint64, out *raft.Log) error {
+	in, err := l.Read(index)
+	if err != nil {
+		return err
+	}
+	out.Data = in.Value
+	out.Index = in.Offset
+	out.Type = raft.LogType(in.Type)
+	out.Term = in.Term
+	return nil
 }
