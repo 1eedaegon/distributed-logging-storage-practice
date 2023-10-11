@@ -83,8 +83,9 @@ export PATH="$PATH:$(go env GOPATH)/bin"
   - [x] Tracing
 - [x] Distributed service
   - [x] Service discovery
-  - [ ] Concensus
-  - [ ] Load balancing
+  - [x] Concensus
+  - [ ] Multiplexer
+  - [ ] Client load balancing
 - [ ] Deployments
   - [ ] Kubernetes
     - [ ] FQDN Advertising

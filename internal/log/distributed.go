@@ -174,16 +174,61 @@ func (l *DistributedLog) Read(offset uint64) (*api.Record, error) {
 
 // Serf membership
 func (l *DistributedLog) Join(id, addr string) error {
+	configFuture := l.raft.GetConfiguration()
+	if err := configFuture.Error(); err != nil {
+		return err
+	}
+	serverID := raft.ServerID(id)
+	serverAddr := raft.ServerAddress(addr)
+	for _, srv := range configFuture.Configuration().Servers {
+		// 이미 Join한 서버면 return
+		if srv.ID == serverID || srv.Address == serverAddr {
+			return nil
+		}
+		// 중첩된 서버가 있으면 지운다(Unique ID)
+		removeFuture := l.raft.RemoveServer(serverID, 0, 0)
+		if err := removeFuture.Error(); err != nil {
+			return err
+		}
+	}
+	// 우선 모든 서버는 Voter로써 R/W 권한을 갖는다.
+	// Read only 서버를 두고 Leader election 부하를 줄이고 싶으면
+	// raft.AddNotVoter()를 이용
+	addFuture := l.raft.AddVoter(serverID, serverAddr, 0, 0)
+	if err := addFuture.Error(); err != nil {
+		return err
+	}
 	return nil
 }
 func (l *DistributedLog) Leave(id string) error {
+	removeFuture := l.raft.RemoveServer(raft.ServerID(id), 0, 0)
+	if err := removeFuture.Error(); err != nil {
+		return err
+	}
 	return nil
 }
+
 func (l *DistributedLog) WaitForLeader(timeout time.Duration) error {
-	return nil
+	timeoutc := time.After(timeout)
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-timeoutc:
+			return fmt.Errorf("timed out")
+		case <-ticker.C:
+			if l := l.raft.Leader(); l != "" {
+				return nil
+			}
+		}
+	}
 }
-func(l *DistributedLog)Close() error {
-	return nil
+func (l *DistributedLog) Close() error {
+	f := l.raft.Shutdown()
+	if err := f.Error(); err != nil {
+		return err
+	}
+	return l.log.Close()
 }
 
 var _ raft.FSM = (*fsm)(nil)
@@ -285,7 +330,7 @@ func newLogStore(dir string, c Config) (*logStore, error) {
 	return &logStore{log}, nil
 }
 
-func (l *logStore) FirstIndex(dir string, c Config) (uint64, error) {
+func (l *logStore) FirstIndex() (uint64, error) {
 	return l.LowestOffset()
 }
 
