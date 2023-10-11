@@ -2,7 +2,10 @@ package log
 
 import (
 	"bytes"
+	"crypto/tls"
+	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"time"
@@ -265,7 +268,7 @@ func newLogStore(dir string, c Config) (*logStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &logStore{log: log}, nil
+	return &logStore{log}, nil
 }
 
 func (l *logStore) FirstIndex(dir string, c Config) (uint64, error) {
@@ -287,4 +290,114 @@ func (l *logStore) GetLog(index uint64, out *raft.Log) error {
 	out.Type = raft.LogType(in.Type)
 	out.Term = in.Term
 	return nil
+}
+
+func (l *logStore) StoreLog(record *raft.Log) error {
+	return l.StoreLogs([]*raft.Log{record})
+}
+
+func (l *logStore) StoreLogs(records []*raft.Log) error {
+	for _, record := range records {
+		if _, err := l.Append(&api.Record{
+			Value: record.Data,
+			Term:  record.Term,
+			Type:  uint32(record.Type),
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (l *logStore) DeleteRange(min, max uint64) error {
+	return l.Truncate(max)
+}
+
+/*
+*
+=== 주의 ===
+고속 stream 처리에 맞게 stream을 저장하는 장치에 back-pressure가 구현되어야한다.
+* Reference
+- Roblox의 consul, boltDB:
+- https://blog.roblox.com/2022/01/roblox-return-to-service-10-28-10-31-2021/
+*/
+
+/**
+== raft.StreamLayer ==
+implement: net.listener / Dial()
+type StreamLayer interface {
+	net.Listener
+	Dial(address raft.ServerAddress, timeout time.Duration) (net.Conn, error)
+}
+*/
+
+var _ raft.StreamLayer = (*StreamLayer)(nil)
+
+type StreamLayer struct {
+	ln              net.Listener
+	serverTLSConfig *tls.Config
+	peerTLSConfig   *tls.Config
+}
+
+func NewStreamLayer(ln net.Listener, serverTLSConfig, peerTLSConfig *tls.Config) *StreamLayer {
+	return &StreamLayer{
+		ln:              ln,
+		serverTLSConfig: serverTLSConfig,
+		peerTLSConfig:   peerTLSConfig,
+	}
+}
+
+const RaftRPC = 1
+
+func (s *StreamLayer) Dial(addr raft.ServerAddress, timeout time.Duration) (net.Conn, error) {
+	dialer := &net.Dialer{Timeout: timeout}
+	conn, err := dialer.Dial("tcp", string(addr))
+	if err != nil {
+		return nil, err
+	}
+	// Mux에 Raft전용 RPC Connection을 알린다.
+	// 동시에 Log RPC가 살아있는 지 확인한다.
+	_, err = conn.Write([]byte{byte(RaftRPC)})
+	if err != nil {
+		return nil, err
+	}
+	if s.peerTLSConfig != nil {
+		conn = tls.Client(conn, s.peerTLSConfig)
+	}
+	return conn, nil
+}
+
+func (s *StreamLayer) Accept() (net.Conn, error) {
+	conn, err := s.ln.Accept()
+	if err != nil {
+		return nil, err
+	}
+	b := make([]byte, 1)
+	_, err = conn.Read(b)
+	if err != nil {
+		return nil, err
+	}
+	/**
+	bytes.Compare(a, b):
+	Compare byte slice between a and b.
+	- result will be 0 if a == b,
+	- -1 if a < b,
+	- and +1 if a > b.
+	- A nil argument is equivalent to an empty slice
+	*/
+	if bytes.Compare([]byte{byte(RaftRPC)}, b) != 0 {
+		return nil, fmt.Errorf("not a rpc raft")
+	}
+	if s.serverTLSConfig != nil {
+		return tls.Server(conn, s.serverTLSConfig), nil
+	}
+	return conn, nil
+}
+
+func (s *StreamLayer) Close() error {
+	return s.ln.Close()
+}
+
+func (s *StreamLayer) Addr() net.Addr {
+	return s.ln.Addr()
 }
