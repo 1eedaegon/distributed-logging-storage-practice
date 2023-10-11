@@ -172,6 +172,20 @@ func (l *DistributedLog) Read(offset uint64) (*api.Record, error) {
 	return l.log.Read(offset)
 }
 
+// Serf membership
+func (l *DistributedLog) Join(id, addr string) error {
+	return nil
+}
+func (l *DistributedLog) Leave(id string) error {
+	return nil
+}
+func (l *DistributedLog) WaitForLeader(timeout time.Duration) error {
+	return nil
+}
+func(l *DistributedLog)Close() error {
+	return nil
+}
+
 var _ raft.FSM = (*fsm)(nil)
 
 type fsm struct {
@@ -393,7 +407,6 @@ func (s *StreamLayer) Accept() (net.Conn, error) {
 	}
 	return conn, nil
 }
-
 func (s *StreamLayer) Close() error {
 	return s.ln.Close()
 }
