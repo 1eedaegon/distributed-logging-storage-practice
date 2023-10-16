@@ -54,6 +54,7 @@ func (l *DistributedLog) setupLog(dataDir string) error {
 */
 func (l *DistributedLog) setupRaft(dataDir string) error {
 	fsm := &fsm{log: l.log}
+
 	logDir := filepath.Join(dataDir, "raft", "log")
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return err
@@ -61,6 +62,9 @@ func (l *DistributedLog) setupRaft(dataDir string) error {
 	logConfig := l.config
 	logConfig.Segment.InitialOffset = 1
 	logStore, err := newLogStore(logDir, logConfig)
+	if err != nil {
+		return err
+	}
 
 	stableStore, err := raftboltdb.NewBoltStore(filepath.Join(dataDir, "raft", "stable"))
 	if err != nil {
@@ -85,6 +89,7 @@ func (l *DistributedLog) setupRaft(dataDir string) error {
 		timeout,
 		os.Stderr,
 	)
+
 	config := raft.DefaultConfig()
 	config.LocalID = l.config.Raft.LocalID
 	if l.config.Raft.HeartbeatTimeout != 0 {
@@ -108,11 +113,9 @@ func (l *DistributedLog) setupRaft(dataDir string) error {
 		snapshotStore,
 		transport,
 	)
-
 	if err != nil {
 		return err
 	}
-
 	if l.config.Raft.Bootstrap {
 		config := raft.Configuration{
 			Servers: []raft.Server{{
