@@ -51,6 +51,7 @@ func TestAgent(t *testing.T) {
 			startJoinAddrs = append(startJoinAddrs, agents[0].Config.BindAddr)
 		}
 		agent, err := agent.New(agent.Config{
+			Bootstrap:       i == 0,
 			NodeName:        fmt.Sprintf("%d", i),
 			StartJoinAddrs:  startJoinAddrs,
 			BindAddr:        bindAddr,
