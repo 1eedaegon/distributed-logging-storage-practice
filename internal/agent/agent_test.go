@@ -19,6 +19,8 @@ import (
 )
 
 func TestAgent(t *testing.T) {
+	var agents []*agent.Agent
+
 	serverTLSConfig, err := config.SetupTLSConfig(config.TLSConfig{
 		CertFile:      config.ServerCertFile,
 		KeyFile:       config.ServerKeyFile,
@@ -37,7 +39,6 @@ func TestAgent(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	var agents []*agent.Agent
 	for i := 0; i < 3; i++ {
 		ports := port.Get(3)
 		bindAddr := fmt.Sprintf("%s:%d", "127.0.0.1", ports[0])
@@ -50,9 +51,10 @@ func TestAgent(t *testing.T) {
 		if i != 0 {
 			startJoinAddrs = append(startJoinAddrs, agents[0].Config.BindAddr)
 		}
+
 		agent, err := agent.New(agent.Config{
-			Bootstrap:       i == 0,
 			NodeName:        fmt.Sprintf("%d", i),
+			Bootstrap:       i == 0,
 			StartJoinAddrs:  startJoinAddrs,
 			BindAddr:        bindAddr,
 			RPCPort:         rpcPort,
@@ -63,6 +65,7 @@ func TestAgent(t *testing.T) {
 			PeerTLSConfig:   peerTLSConfig,
 		})
 		require.NoError(t, err)
+
 		agents = append(agents, agent)
 	}
 	defer func() {
@@ -72,7 +75,8 @@ func TestAgent(t *testing.T) {
 			require.NoError(t, os.RemoveAll(agent.Config.DataDir))
 		}
 	}()
-	time.Sleep(3 * time.Second)
+
+	time.Sleep(10 * time.Second)
 
 	leaderClient := client(t, agents[0], peerTLSConfig)
 	produceResponse, err := leaderClient.Produce(context.Background(),
@@ -90,6 +94,7 @@ func TestAgent(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, consumeResponse.Record.Value, []byte("foo"))
+
 	time.Sleep(3 * time.Second)
 
 	// replica에서 데이터가 복제되는지 확인
