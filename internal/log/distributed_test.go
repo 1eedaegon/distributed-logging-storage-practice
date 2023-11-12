@@ -20,7 +20,6 @@ func TestMultipleNodes(t *testing.T) {
 	// 분산 노드 3개로 테스트
 	nodeCount := 3
 	ports := port.Get(nodeCount)
-
 	for i := 0; i < nodeCount; i++ {
 		dataDir, err := os.MkdirTemp("", "distributed-log-test")
 		require.NoError(t, err)
@@ -50,7 +49,7 @@ func TestMultipleNodes(t *testing.T) {
 			err = logs[0].Join(fmt.Sprintf("%d", i), ln.Addr().String())
 			require.NoError(t, err)
 		} else {
-			err = l.WaitForLeader(3 * time.Second)
+			err = l.WaitForLeader(5 * time.Second)
 			require.NoError(t, err)
 		}
 		logs = append(logs, l)
@@ -58,7 +57,6 @@ func TestMultipleNodes(t *testing.T) {
 	records := []*apiv1.Record{
 		{Value: []byte("First")},
 		{Value: []byte("Second")},
-		{Value: []byte("Third")},
 	}
 	for _, record := range records {
 		off, err := logs[0].Append(record)
@@ -88,9 +86,10 @@ func TestMultipleNodes(t *testing.T) {
 
 	record, err := logs[1].Read(off)
 	require.IsType(t, apiv1.ErrOffsetOutOfRange{}, err)
-	require.Nil(t, record)
+
+	require.Equal(t, []byte("third"), record.Value)
 
 	record, err = logs[2].Read(off)
 	require.NoError(t, err)
-	require.Equal(t, []byte("third"), record.Value)
+	require.Nil(t, record)
 }

@@ -76,7 +76,7 @@ func TestAgent(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	leaderClient := client(t, agents[0], peerTLSConfig)
 	produceResponse, err := leaderClient.Produce(context.Background(),
