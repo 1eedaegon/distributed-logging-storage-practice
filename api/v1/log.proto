@@ -12,6 +12,7 @@ service Log {
     rpc Consume(ConsumeRequest) returns (ConsumeResponse) {} 
     rpc ConsumeStream(ConsumeRequest) returns (stream ConsumeResponse) {} // 클라가 서버로 요청보내면 스트림으로 내려준다. 
     rpc ProduceStream(stream ProduceRequest) returns (stream ProduceResponse) {} // 클라도 스트림, 서버도 스트림 
+    rpc GetServers(GetServersRequest) returns (GetServersResponse) {} // Client service discovery와 LB 역할을 동시 수행
 }
 
 // Produce는 레코드를 보내면 생성된 레코드의 오프셋을 반환한다.
@@ -38,4 +39,17 @@ message Record {
     uint64 offset = 2;
     uint64 term = 3;
     uint32 type = 4;
+}
+
+
+message GetServersRequest {}
+
+message GetServersResponse{
+    repeated Server servers = 1;
+}
+// 서버의 leader여부와 위치를 반환
+message Server {
+    string id = 1;
+    string rpc_addr = 2;
+    bool is_leader = 3;    
 }

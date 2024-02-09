@@ -184,14 +184,17 @@ func (l *DistributedLog) Join(id, addr string) error {
 	serverID := raft.ServerID(id)
 	serverAddr := raft.ServerAddress(addr)
 	for _, srv := range configFuture.Configuration().Servers {
-		// 이미 Join한 서버면 return
 		if srv.ID == serverID || srv.Address == serverAddr {
-			return nil
-		}
-		// 중첩된 서버가 있으면 지운다(Unique ID)
-		removeFuture := l.raft.RemoveServer(serverID, 0, 0)
-		if err := removeFuture.Error(); err != nil {
-			return err
+			// 이미 Join한 서버면 return
+			if srv.ID == serverID && srv.Address == serverAddr {
+				return nil
+			}
+
+			// 중첩된 서버가 있으면 지운다(Unique ID)
+			removeFuture := l.raft.RemoveServer(serverID, 0, 0)
+			if err := removeFuture.Error(); err != nil {
+				return err
+			}
 		}
 	}
 	// 우선 모든 서버는 Voter로써 R/W 권한을 갖는다.
@@ -232,6 +235,22 @@ func (l *DistributedLog) Close() error {
 		return err
 	}
 	return l.log.Close()
+}
+
+func (l *DistributedLog) GetServers() ([]*api.Server, error) {
+	future := l.raft.GetConfiguration()
+	if err := future.Error(); err != nil {
+		return nil, err
+	}
+	var servers []*api.Server
+	for _, server := range future.Configuration().Servers {
+		servers = append(servers, &api.Server{
+			Id:       string(server.ID),
+			RpcAddr:  string(server.Address),
+			IsLeader: l.raft.Leader() == server.Address,
+		})
+	}
+	return servers, nil
 }
 
 var _ raft.FSM = (*fsm)(nil)

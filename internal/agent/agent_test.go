@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -19,7 +20,6 @@ import (
 )
 
 func TestAgent(t *testing.T) {
-	var agents []*agent.Agent
 
 	serverTLSConfig, err := config.SetupTLSConfig(config.TLSConfig{
 		CertFile:      config.ServerCertFile,
@@ -39,8 +39,10 @@ func TestAgent(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	var agents []*agent.Agent
 	for i := 0; i < 3; i++ {
-		ports := port.Get(3)
+		log.Printf("[SPAWNed AGENT 1]\n")
+		ports := port.Get(2)
 		bindAddr := fmt.Sprintf("%s:%d", "127.0.0.1", ports[0])
 		rpcPort := ports[1]
 
@@ -70,7 +72,9 @@ func TestAgent(t *testing.T) {
 	}
 	defer func() {
 		for _, agent := range agents {
-			_ = agent.Shutdown()
+			log.Printf("[SPAWNed AGENT 2]\n")
+			err := agent.Shutdown()
+			require.NoError(t, err)
 			require.NoError(t, os.RemoveAll(agent.Config.DataDir))
 		}
 	}()

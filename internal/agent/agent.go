@@ -114,6 +114,7 @@ func (a *Agent) setupLog() error {
 		a.Config.PeerTLSConfig)
 	logConfig.Raft.LocalID = raft.ServerID(a.Config.NodeName)
 	logConfig.Raft.Bootstrap = a.Config.Bootstrap
+	logConfig.Raft.CommitTimeout = 100 * time.Millisecond
 	var err error
 	a.log, err = log.NewDistributedLog(a.Config.DataDir, logConfig)
 	if err != nil {
@@ -122,7 +123,7 @@ func (a *Agent) setupLog() error {
 	if a.Config.Bootstrap {
 		return a.log.WaitForLeader(3 * time.Second)
 	}
-	return nil
+	return err
 }
 func (a *Agent) setupServer() error {
 	authorizer := auth.New(
@@ -130,8 +131,9 @@ func (a *Agent) setupServer() error {
 		a.Config.ACLPolicyFile,
 	)
 	serverConfig := &server.Config{
-		CommitLog:  a.log,
-		Authorizer: authorizer,
+		CommitLog:   a.log,
+		Authorizer:  authorizer,
+		GetServerer: a.log,
 	}
 	var opts []grpc.ServerOption
 	if a.Config.ServerTLSConfig != nil {
