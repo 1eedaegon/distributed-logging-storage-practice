@@ -20,6 +20,7 @@ func TestMultipleNodes(t *testing.T) {
 	// 분산 노드 3개로 테스트
 	nodeCount := 3
 	ports := port.Get(nodeCount)
+
 	for i := 0; i < nodeCount; i++ {
 		dataDir, err := os.MkdirTemp("", "distributed-log-test")
 		require.NoError(t, err)
@@ -35,7 +36,7 @@ func TestMultipleNodes(t *testing.T) {
 		config.Raft.HeartbeatTimeout = 50 * time.Millisecond
 		config.Raft.ElectionTimeout = 50 * time.Millisecond
 		config.Raft.LeaderLeaseTimeout = 50 * time.Millisecond
-		config.Raft.CommitTimeout = 50 * time.Millisecond
+		config.Raft.CommitTimeout = 5 * time.Millisecond
 		// 첫번째 노드는 기본 설정
 		if i == 0 {
 			config.Raft.Bootstrap = true
@@ -49,7 +50,7 @@ func TestMultipleNodes(t *testing.T) {
 			err = logs[0].Join(fmt.Sprintf("%d", i), ln.Addr().String())
 			require.NoError(t, err)
 		} else {
-			err = l.WaitForLeader(5 * time.Second)
+			err = l.WaitForLeader(3 * time.Second)
 			require.NoError(t, err)
 		}
 		logs = append(logs, l)
@@ -79,17 +80,20 @@ func TestMultipleNodes(t *testing.T) {
 	require.NoError(t, err)
 
 	time.Sleep(50 * time.Millisecond)
-	off, err := logs[0].Append(&apiv1.Record{Value: []byte("third")})
+
+	off, err := logs[0].Append(&apiv1.Record{
+		Value: []byte("third")},
+	)
 	require.NoError(t, err)
 
 	time.Sleep(50 * time.Millisecond)
 
 	record, err := logs[1].Read(off)
 	require.IsType(t, apiv1.ErrOffsetOutOfRange{}, err)
-
-	require.Equal(t, []byte("third"), record.Value)
+	require.Nil(t, record)
 
 	record, err = logs[2].Read(off)
 	require.NoError(t, err)
-	require.Nil(t, record)
+	require.Equal(t, []byte("third"), record.Value)
+	require.Equal(t, off, record.Offset)
 }

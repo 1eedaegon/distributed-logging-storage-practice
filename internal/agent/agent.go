@@ -151,6 +151,7 @@ func (a *Agent) setupServer() error {
 	}()
 	return err
 }
+
 func (a *Agent) setupMembership() error {
 	rpcAddr, err := a.Config.RPCAddr()
 	if err != nil {

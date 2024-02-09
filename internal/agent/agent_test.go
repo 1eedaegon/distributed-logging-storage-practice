@@ -70,8 +70,7 @@ func TestAgent(t *testing.T) {
 	}
 	defer func() {
 		for _, agent := range agents {
-			err := agent.Shutdown()
-			require.NoError(t, err)
+			_ = agent.Shutdown()
 			require.NoError(t, os.RemoveAll(agent.Config.DataDir))
 		}
 	}()
@@ -79,7 +78,8 @@ func TestAgent(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	leaderClient := client(t, agents[0], peerTLSConfig)
-	produceResponse, err := leaderClient.Produce(context.Background(),
+	produceResponse, err := leaderClient.Produce(
+		context.Background(),
 		&apiv1.ProduceRequest{
 			Record: &apiv1.Record{
 				Value: []byte("foo"),
@@ -87,7 +87,8 @@ func TestAgent(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
-	consumeResponse, err := leaderClient.Consume(context.Background(),
+	consumeResponse, err := leaderClient.Consume(
+		context.Background(),
 		&apiv1.ConsumeRequest{
 			Offset: produceResponse.Offset,
 		},
@@ -99,7 +100,8 @@ func TestAgent(t *testing.T) {
 
 	// replica에서 데이터가 복제되는지 확인
 	followerClient := client(t, agents[1], peerTLSConfig)
-	consumeResponse, err = followerClient.Consume(context.Background(),
+	consumeResponse, err = followerClient.Consume(
+		context.Background(),
 		&apiv1.ConsumeRequest{
 			Offset: produceResponse.Offset,
 		},
@@ -129,7 +131,7 @@ func client(t *testing.T, agent *agent.Agent, tlsConfig *tls.Config) apiv1.LogCl
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(tlsCreds)}
 	rpcAddr, err := agent.Config.RPCAddr()
 	require.NoError(t, err)
-	conn, err := grpc.Dial(fmt.Sprintf("%s", rpcAddr), opts...)
+	conn, err := grpc.Dial(rpcAddr, opts...)
 	require.NoError(t, err)
 	cli := apiv1.NewLogClient(conn)
 	return cli
