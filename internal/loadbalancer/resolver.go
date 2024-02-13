@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
+	"google.golang.org/grpc/serviceconfig"
 
 	api "github.com/1eedaegon/distributed-logging-storage-practice/api/v1"
 )
@@ -17,7 +18,7 @@ type Resolver struct {
 	mu            sync.Mutex
 	clientConn    resolver.ClientConn
 	resolverConn  *grpc.ClientConn
-	serviceconfig *serviceConfig.ParseResult
+	serviceConfig *serviceconfig.ParseResult
 	logger        *zap.Logger
 }
 
@@ -30,7 +31,7 @@ func (r *Resolver) Build(target resolver.Target, cc resolver.ClientConn, opts re
 	if opts.DialCreds != nil {
 		dialOpts = append(dialOpts, grpc.WithTransportCredentials(opts.DialCreds))
 	}
-	r.serviceconfig = r.clientConn.ParseServiceConfig(
+	r.serviceConfig = r.clientConn.ParseServiceConfig(
 		fmt.Sprintf(`{"loadbalancingConfig": [{"%s": {}}]}`, Name),
 	)
 	var err error
@@ -75,7 +76,7 @@ func (r *Resolver) ResolveNow(resolver.ResolveNowOptions) {
 	}
 	r.clientConn.UpdateState(resolver.State{
 		Addresses:     addrs,
-		ServiceConfig: r.serviceconfig,
+		ServiceConfig: r.serviceConfig,
 	})
 
 }
