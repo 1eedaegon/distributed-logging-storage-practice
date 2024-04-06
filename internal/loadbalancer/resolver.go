@@ -78,7 +78,6 @@ func (r *Resolver) ResolveNow(resolver.ResolveNowOptions) {
 		Addresses:     addrs,
 		ServiceConfig: r.serviceConfig,
 	})
-
 }
 
 func (r *Resolver) Close() {
