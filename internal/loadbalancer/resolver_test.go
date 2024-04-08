@@ -2,14 +2,20 @@ package loadbalancer_test
 
 import (
 	"net"
+	"net/url"
 	"testing"
 
 	"github.com/1eedaegon/distributed-logging-storage-practice/internal/config"
+	"github.com/1eedaegon/distributed-logging-storage-practice/internal/loadbalancer"
 	"github.com/1eedaegon/distributed-logging-storage-practice/internal/server"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/internal/resolver"
+	"google.golang.org/grpc/resolver"
+	"google.golang.org/grpc/serviceconfig"
+
+	api "github.com/1eedaegon/distributed-logging-storage-practice/api/v1"
 )
 
 func TestResolver(t *testing.T) {
@@ -45,5 +51,65 @@ func TestResolver(t *testing.T) {
 	})
 	require.NoError(t, err)
 	clientCreds := credentials.NewTLS(tlsConfig)
-	opts := resolver.BuildOptions{}
+	opts := resolver.BuildOptions{
+		DialCreds: clientCreds,
+	}
+	r := &loadbalancer.Resolver{}
+	u, err := url.Parse(l.Addr().String())
+	require.NoError(t, err)
+
+	_, err = r.Build(
+		resolver.Target{
+			URL: *u,
+		},
+		conn, opts,
+	)
+	require.NoError(t, err)
+	wantState := resolver.State{
+		Addresses: []resolver.Address{{
+			Addr:       "localhost:9001",
+			Attributes: attributes.New("is_leader", true),
+		}, {
+			Addr:       "localhost:9002",
+			Attributes: attributes.New("is_leader", false),
+		}},
+	}
+	require.Equal(t, wantState, conn.state)
+
+	conn.state.Addresses = nil
+	r.ResolveNow(resolver.ResolveNowOptions{})
+	require.Equal(t, wantState, conn.state)
+}
+
+type getServers struct{}
+
+func (s *getServers) GetServers() ([]*api.Server, error) {
+	return []*api.Server{{
+		Id:       "leader",
+		RpcAddr:  "localhost:9001",
+		IsLeader: true,
+	}, {
+		Id:      "follower",
+		RpcAddr: "localhost:9002",
+	}}, nil
+}
+
+type clientConn struct {
+	resolver.ClientConn
+	state resolver.State
+}
+
+func (c *clientConn) UpdateState(state resolver.State) error {
+	c.state = state
+	return nil
+}
+
+func (c *clientConn) ReportError(err error) {}
+
+func (c *clientConn) NewAddress(addrs []resolver.Address) {}
+
+func (c *clientConn) NewServiceConfig(config string) {}
+
+func (c *clientConn) ParserServiceConfig(config string) *serviceconfig.ParseResult {
+	return nil
 }
