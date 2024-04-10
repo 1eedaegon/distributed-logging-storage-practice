@@ -86,7 +86,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
   - [x] Concensus
   - [x] Multiplexer
   - [x] Client load balancing
-  - [ ] Service discovery with LB
+  - [x] Service discovery with LB
 - [ ] Deployments
   - [ ] Kubernetes
     - [ ] FQDN Advertising

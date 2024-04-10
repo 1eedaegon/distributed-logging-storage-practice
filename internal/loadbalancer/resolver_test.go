@@ -55,7 +55,7 @@ func TestResolver(t *testing.T) {
 		DialCreds: clientCreds,
 	}
 	r := &loadbalancer.Resolver{}
-	u, err := url.Parse(l.Addr().String())
+	u, err := url.Parse("https://" + l.Addr().String())
 	require.NoError(t, err)
 
 	_, err = r.Build(

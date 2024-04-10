@@ -82,6 +82,6 @@ func (s *subConn) UpdateAddresses(addrs []resolver.Address) {
 
 func (s *subConn) Connect() {}
 
-func (s *subConn) GetOrBuildProducer(loadbalancer.Picker) (p loadbalancer.Picker, close func()) {
-	return loadbalancer.Picker{}, nil
+func (s *subConn) GetOrBuildProducer(balancer.ProducerBuilder) (balancer.Producer, func()) {
+	return s, func() {}
 }

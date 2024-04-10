@@ -12,6 +12,7 @@ import (
 	apiv1 "github.com/1eedaegon/distributed-logging-storage-practice/api/v1"
 	"github.com/1eedaegon/distributed-logging-storage-practice/internal/agent"
 	"github.com/1eedaegon/distributed-logging-storage-practice/internal/config"
+	"github.com/1eedaegon/distributed-logging-storage-practice/internal/loadbalancer"
 	port "github.com/1eedaegon/go-dynamic-port-allocator"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -100,8 +101,6 @@ func TestAgent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, consumeResponse.Record.Value, []byte("foo"))
 
-	time.Sleep(3 * time.Second)
-
 	// replica에서 데이터가 복제되는지 확인
 	followerClient := client(t, agents[1], peerTLSConfig)
 	consumeResponse, err = followerClient.Consume(
@@ -135,7 +134,8 @@ func client(t *testing.T, agent *agent.Agent, tlsConfig *tls.Config) apiv1.LogCl
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(tlsCreds)}
 	rpcAddr, err := agent.Config.RPCAddr()
 	require.NoError(t, err)
-	conn, err := grpc.Dial(rpcAddr, opts...)
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:///%s", loadbalancer.Name, rpcAddr), opts...)
 	require.NoError(t, err)
 	cli := apiv1.NewLogClient(conn)
 	return cli
