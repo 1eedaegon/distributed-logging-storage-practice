@@ -66,3 +66,14 @@ compile:
 		--go_opt=paths=source_relative \
 		--go-grpc_opt=paths=source_relative \
 		--proto_path=.
+
+# DOCKER BUILD
+TAG ?=0.0.1
+.PHONY: docker-build
+docker-build:
+	docker build -t 1eedaegon/dlsp:${TAG} .
+
+# DOCKER PUSH
+.PHONY: docker-push
+docker-push:
+	docker push 1eedaegon/dlsp:${TAG}
