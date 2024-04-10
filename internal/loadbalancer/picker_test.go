@@ -82,6 +82,7 @@ func (s *subConn) UpdateAddresses(addrs []resolver.Address) {
 
 func (s *subConn) Connect() {}
 
+// subConn methods for test mocking
 func (s *subConn) GetOrBuildProducer(balancer.ProducerBuilder) (balancer.Producer, func()) {
 	return s, func() {}
 }
