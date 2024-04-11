@@ -1,56 +1,64 @@
 apiVersion: apps/v1
 Kind: Statefulset
 metadata:
-	name: {{ include "dlsp.fullname" . }}
-	namespace: {{ .Release.Namespace }}
-	labels: {{ include "dlsp.labels" . | nindent 4 }}
+  name: {{ include "dlsp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "dlsp.labels" . | nindent 4 }}
 spec:
-	selector:
-		matchLabels: {{ include "dlsp.selectorLabels" . | nindent 6 }}
-	serviceName: {{ include "dlsp.fullname" . }}
-	replicas: {{ .Values.replicas }}
-	template:
-		metadata:
-			name: {{ include "dlsp.fullname" . }}
-			labels: {{ include "dlsp.labels" . | nindent 8 }}
-		spec:
-			initConatainers:
-			- name: {{ include "dlsp.fullname" . }}-config-init
-				image: busybox
-				imagePullPolicy: IfNotPresent
-				command:
-				- /bin/sh
-				- -c
-				- |-
-					ID=$(echo $HOSTNAME | rev | cut -d- -f1 | rev)
-					cat > /var/run/dlsp/data
-					rpc-port: {{ .Values.rpcPort }}
-					bind-addr: \
-						"$HOSTNAME.dlsp.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"
-					bootstrap: $([ $ID = 0 ] && echo true || echo false)
-					$([ $ID != 0] && echo 'start-join-addrs: "dlsp-0.dlsp.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"')
-					EOD
-				volumeMounts:
-				- name: datadir
-					mountPath: /var/run/dlsp
-			containers:
-			- name: {{ include "dlsp.fullname" . }}
-				image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-				ports:
-				- name: rpc
-					containerPort: {{ .Values.rpcPort }}
-				- name: serf
-					containerPort: {{ .Values.serfPort }}
-				args:
-				- --config-file=/var/run/dlsp/config.yaml
-				volumeMounts:
-				- name: datadir
+  selector:
+    matchLabels: {{ include "dlsp.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "dlsp.fullname" . }}
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      name: {{ include "dlsp.fullname" . }}
+      labels: {{ include "dlsp.labels" . | nindent 8 }}
+    spec:
+      initConatainers:
+      - name: {{ include "dlsp.fullname" .}}-config-init
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - |-
+          ID=$(echo $HOSTNAME | rev | cut -d- -f1 | rev)
+          cat > /var/run/dlsp/data
+          rpc-port: {{ .Values.rpcPort }}
+          bind-addr: \
+            "$HOSTNAME.dlsp.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"
+          bootstrap: $([ $ID = 0 ] && echo true || echo false)
+          $([ $ID != 0] && echo 'start-join-addrs: "dlsp-0.dlsp.{{.Release.Namespace}}.svc.cluster.local:{{.Values.serfPort}}"')
+          EOD
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/dlsp
+      containers:
+      - name: {{ include "dlsp.fullname" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - name: rpc
+          containerPort: {{ .Values.rpcPort }}
+        - name: serf
+          containerPort: {{ .Values.serfPort }}
+        args:
+        - --config-file=/var/run/dlsp/config.yaml
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |-
+              /bin/grpc_health_probe -addr=$HOSTNAME.dlsp.{{.Release.Namespace}}.svc.cluster.local:{{.Values.rpcPort}}
+          initialDelaySeconds: 10
+        volumeMounts:
+        - name: datadir
 
-	volumeClaimTemplates:
-	- metadata:
-			name: datadir
-		spec:
-			accessModes: [ "ReadWriteOnce" ]
-			resources:
-				requests:
-					storage: {{ .Values.storage }}
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.storage }}
