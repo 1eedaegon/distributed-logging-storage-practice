@@ -1,24 +1,22 @@
-apiVersion: apps/v1
-kind: Service
+apiVersion: v1
+Kind: Service
 metadata:
-  name: {{ include "dlsp.fullname" . }}
-  namespace: {{ .Release.Namespace }}
-  labels: {{ include "dlsp.labels" . | nindent 4 }}
+  name: { { include "dlsp.fullname" . } }
+  namespace: { { .Release.Namespace } }
+  labels: { { include "dlsp.labels" . | nindent 4 } }
 spec:
   clusterIP: IfNotPresent
   publishNotReadyAddresses: true
   ports:
-  - name: rpc
-    port: {{.Values.rpcPort }}
-    targetProt: {{ .Values.rpcPort }}
-  - name: serf-tcp
-    protocol: "TCP"
-    port: {{ .Values.serfPort }}
-    targetProt: {{ .Values.serfPort}}
-  - name: serf-udp
-    protocol: "UDP"
-    port: {{ .Values.serfPort }}
-    targetProt: {{ .Values.serfPort}}
-  selector: {{ include "dlsp.selectorLabels" . | nindent 4 }}
-  
-  
+    - name: rpc
+      port: { { .Values.rpcPort } }
+      targetProt: { { .Values.rpcPort } }
+    - name: serf-tcp
+      protocol: "TCP"
+      port: { { .Values.serfPort } }
+      targetProt: { { .Values.serfPort } }
+    - name: serf-udp
+      protocol: "UDP"
+      port: { { .Values.serfPort } }
+      targetProt: { { .Values.serfPort } }
+  selector: { { include "dlsp.selectorLabels" . | nindent 4 } }
