@@ -37,6 +37,7 @@ func TestMultipleNodes(t *testing.T) {
 		config.Raft.ElectionTimeout = 10 * time.Millisecond
 		config.Raft.LeaderLeaseTimeout = 10 * time.Millisecond
 		config.Raft.CommitTimeout = 5 * time.Millisecond
+		config.Raft.BindAddr = ln.Addr().String()
 		// 첫번째 노드는 기본 설정
 		if i == 0 {
 			config.Raft.Bootstrap = true

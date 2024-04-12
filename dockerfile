@@ -3,7 +3,7 @@ WORKDIR /go/src/dlsp
 
 COPY . . 
 RUN CGO_ENABLED=0 go build -o /go/bin/dlsp ./cmd/dlsp
-RUN GRPC_HEALTH_PROBE_VERSION=v0.4.25 && \
+RUN GRPC_HEALTH_PROBE_VERSION=v0.4.21 && \
     wget -q0 /go/bin/grpc_health_probe \
     https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/\
 $(GRPC_HEALTH_PROBE_VERSION)/grpc_health_probe-linux-amd64 && \

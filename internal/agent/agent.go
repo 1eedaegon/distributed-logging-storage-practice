@@ -112,6 +112,11 @@ func (a *Agent) setupLog() error {
 		raftLn,
 		a.Config.ServerTLSConfig,
 		a.Config.PeerTLSConfig)
+	rpcAddr, err: = a.Config.RPCAddr()
+	if err != nil {
+		return err
+	}
+	logConfig.Raft.BindAddr= rpcAddr
 	logConfig.Raft.LocalID = raft.ServerID(a.Config.NodeName)
 	logConfig.Raft.Bootstrap = a.Config.Bootstrap
 	logConfig.Raft.CommitTimeout = 100 * time.Millisecond

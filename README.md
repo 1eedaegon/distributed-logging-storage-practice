@@ -87,10 +87,10 @@ export PATH="$PATH:$(go env GOPATH)/bin"
   - [x] Multiplexer
   - [x] Client load balancing
   - [x] Service discovery with LB
-- [ ] Deployments
-  - [ ] Kubernetes
-    - [ ] FQDN Advertising
-  - [ ] Helm chart
+- [x] Deployments
+  - [x] Kubernetes
+    - [x] FQDN Advertising
+  - [x] Helm chart
 
 ## Ref
 
